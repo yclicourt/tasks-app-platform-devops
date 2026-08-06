@@ -1,6 +1,8 @@
 name: "Backend-Tasks-App"
 
 on:
+
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -25,9 +27,9 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@v5
         with:
           python-version: 3.14
       - name: Install Python dependencies
@@ -58,9 +60,9 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@v5
         with:
           python-version: 3.14
       - name: Install dependencies backend
