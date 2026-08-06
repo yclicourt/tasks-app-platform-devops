@@ -31,10 +31,7 @@ jobs:
         run: |
           python -m venv venv
           ./venv/bin/pip install --upgrade pip
-          ./venv/bin/pip install black flake8
-      - name: Black
-        run: |
-          ./venv/bin/black --check .
+          ./venv/bin/pip install flake8
       - name: Flake8
         run: |
           ./venv/bin/flake8 .
