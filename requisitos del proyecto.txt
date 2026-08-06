@@ -1,0 +1,426 @@
+Objetivo
+Production-Ready GitOps Deployment using Terraform, GitHub Actions, Harbor, Trivy and ArgoCD
+
+stack
+Terraform
+Kubernetes Provider
+GitHub Actions
+Harbor
+Trivy
+ArgoCD
+k3s
+Django
+React
+PostgreSQL
+
+
+Kubernetes
+
+Aquí es donde quiero que pienses.
+
+¿Debe Terraform crear los Deployments?
+
+¿O debe crear únicamente la infraestructura?
+
+Terraform como ya usa el Provider de kubernetes ya crea directamente y despliega los recursos
+
+
+GitHub Actions
+
+Frontend
+Push
+Lint
+Test
+Build(Harbor)
+Security-Scan(trivy)
+Actualizar Manifiestos
+Terraform-Infra(namespace,ingress,storage)-> se ejectua la primera vez , luego si se detecta algun cambio entonces se vuelve a ejecutar
+ArgoCD-Sync
+
+Backend
+Push
+Lint
+Test
+Build(Harbor)
+Security-Scan(trivy)
+Terraform-Infra (namespace,ingress,storage)-> se ejectua la primera vez , luego si se detecta algun cambio entonces se vuelve a ejecutar
+ArgoCD-Sync
+
+¿Realmente Terraform debería ejecutarse en cada push?
+No, necesariamente, no siempre existe cambio en la infraestructura, por lo que Terraform se ejecutaria en caso de algun cambio
+
+
+Arquitectura
+
+terraform-gitops-demo/
+├── backend/
+├── frontend/
+├── terraform/
+├── helm/
+│   ├── backend/
+│   ├── frontend/
+│   └── postgres/
+└── .github/
+
+¿Quién debería ser el dueño (owner) de un Deployment de Kubernetes: Terraform o ArgoCD?
+
+Terraform administra
+
+Cluster (si aplica)
+Namespace
+StorageClass
+PersistentVolumes (cuando son estáticos)
+PersistentVolumeClaims (si forman parte de la infraestructura)
+Ingress Controller
+Ingress
+Network Policies
+ServiceAccounts
+RBAC
+External Secrets Operator
+Cert-Manager
+Prometheus
+Grafana
+Loki
+ArgoCD
+
+ArgoCD debería administrar todo lo relacionado a la app
+Backend Deployment
+Frontend Deployment
+Postgres (si decides administrarlo con GitOps)
+Services
+ConfigMaps
+Secrets (o referencias a External Secrets)
+HorizontalPodAutoscaler
+PodDisruptionBudget
+
+¿Cómo se enterará ArgoCD de que ahora debe desplegar la versión v1.0.4 en lugar de v1.0.3?
+Lo realizaria a traves de helm o kustomize , ya que estos sincronizan cada cambio con el repo y argo , vigila cada cambio que se realiza para sync la infraestructura y si tuviera una eleccion eligiria helm, para evitar el boilerplate que realiza kustomize
+
+
+------------------------------------------------------------------------------------------------
+Necesito que me revises esta estructura helm, si te das cuenta cree una carpeta templates y dentro toda la estructura
+├── helm/templates/
+│   ├── backend/
+│   ├── frontend/
+│   └── postgres/
+
+backend/
+backend-deployment.yml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: backend-app-ingress
+  namespace: {{.Values.backend_tasks_app.namespace}}
+  labels:
+    app.kubernetes.io/name: backend-app-ingress
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    # Ayuda con problemas de timeout y buffers
+    traefik.ingress.kubernetes.io/service.serversscheme: http
+    traefik.ingress.kubernetes.io/router.priority: "10"
+spec:
+  rules:
+    - host: api-tasks.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{.Values.backend_tasks_app.serviceName}}
+                port:
+                  number: 8000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{.Values.backend_tasks_app.name}}
+  namespace: {{.Values.backend_tasks_app.namespace}}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{.Values.backend_tasks_app.name}}
+  template:
+    metadata:
+      labels:
+        app: {{.Values.backend_tasks_app.name}}
+    spec:
+      serviceAccountName: {{.Values.backend_tasks_app.serviceAccountName}}
+      initContainers:
+        - name: run-migrations
+          image: "{{ .Values.backend_tasks_app.image.repository}}:{{.Values.backend_tasks_app.image.tag}}"
+          command: ['python', 'manage.py', 'migrate', '--noinput']
+          envFrom:
+            - secretRef:
+                name: {{.Values.backend_tasks_app.secretName}}
+      containers:
+        - name: {{.Values.backend_tasks_app.name}}
+          image: "{{ .Values.backend_tasks_app.image.repository}}:{{.Values.backend_tasks_app.image.tag}}"
+          imagePullPolicy: Always
+          envFrom:
+            - secretRef:
+                name: {{.Values.backend_tasks_app.secretName}}
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "500m"
+            limits:
+              memory: "512Mi"
+              cpu: "1000m"
+          ports:
+            - containerPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{.Values.backend_tasks_app.serviceName}}
+  namespace: {{.Values.backend_tasks_app.namespace}}
+spec:
+  type: ClusterIP
+  selector:
+    app: {{.Values.backend_tasks_app.name}}
+  ports:
+    - port: 8000
+      targetPort: 8000
+
+backend-secret.yml
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{.Values.backend_tasks_app.secretName}}
+  namespace: {{.Values.backend_tasks_app.namespace}}
+type: Opaque
+stringData:
+  DB_NAME: ****
+  DB_USER: ***
+  DB_PASSWORD: **
+  DB_HOST: ***
+  DB_PORT: '5432'
+  CORS_ALLOWED_ORIGINS: "http://localhost:port"
+  ALLOWED_HOSTS: "tasks-app.local,api-tasks.local,api-tasks.local:8000,localhost,127.0.0.1"
+  DEBUG: "False"
+  SECRET_KEY: *******
+
+
+db/
+postgres-secret.yml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{.Values.tasks_db.secretName}}
+  namespace: {{.Values.tasks_db.namespace}}
+type: Opaque
+stringData:
+  POSTGRES_USER: ******
+  POSTGRES_PASSWORD: ******
+  POSTGRES_DB: *****
+
+postgres-statefulset.yml
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{.Values.tasks_db.name}}
+  namespace: {{.Values.tasks_db.namespace}}
+spec:
+  selector:
+    matchLabels:
+      app: {{.Values.tasks_db.name}}
+  serviceName: {{.Values.tasks_db.serviceName}}
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: {{.Values.tasks_db.name}}
+    spec:
+      securityContext:
+        fsGroup: 70
+      serviceAccountName: {{.Values.tasks_db.serviceAccountName}}
+      containers:
+        - name: {{.Values.tasks_db.name}}
+          image: "{{ .Values.tasks_db.image.repository }}:{{ .Values.tasks_db.image.tag }}"
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: {{.Values.tasks_db.secretName}}
+                  key: POSTGRES_DB
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{.Values.tasks_db.secretName}}
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{.Values.tasks_db.secretName}}
+                  key: POSTGRES_PASSWORD
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: {{.Values.tasks_db.volumeName}}
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: {{.Values.tasks_db.volumeName}}
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: local-path
+        resources:
+          requests:
+            storage: 2Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{.Values.tasks_db.serviceName}}
+  namespace: {{.Values.tasks_db.namespace}}
+spec:
+  clusterIP: None
+  selector:
+    app: {{.Values.tasks_db.name}}
+  ports:
+    - port: 5432
+      targetPort: 5432
+
+frontend/
+frontend-deployment.yml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: frontend-app-ingress
+  namespace: {{.Values.frontend_tasks_app.namespace}}
+  labels:
+    app.kubernetes.io/name: frontend-app-ingress
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/router.priority: "10000"
+    traefik.ingress.kubernetes.io/router.pathmatcher: "PathPrefix"
+spec:
+  rules:
+    - host: tasks-app.local
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: {{.Values.frontend_tasks_app.serviceName}}
+                port:
+                  number: 80
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{.Values.frontend_tasks_app.name}}
+  namespace: {{.Values.frontend_tasks_app.namespace}}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{.Values.frontend_tasks_app.name}}
+  template:
+    metadata:
+      labels:
+        app: {{.Values.frontend_tasks_app.name}}
+    spec:
+      serviceAccountName: {{.Values.frontend_tasks_app.serviceAccountName}}
+      containers:
+        - name: {{.Values.frontend_tasks_app.name}}
+          image: "{{.Values.frontend_tasks_app.image.repository}}:{{.Values.frontend_tasks_app.image.tag}}"
+          imagePullPolicy: Always
+          env:
+            - name: VITE_API_URL_PLACEHOLDER
+              valueFrom:
+                secretKeyRef:
+                  name: {{.Values.frontend_tasks_app.secretName}}
+                  key: VITE_API_URL_PLACEHOLDER
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{.Values.frontend_tasks_app.serviceName}}
+  namespace: {{.Values.frontend_tasks_app.namespace}}
+spec:
+  type: ClusterIP
+  selector:
+    app: {{.Values.frontend_tasks_app.name}}
+  ports:
+    - port: 80
+      targetPort: 8080
+
+frontend-secret.yml
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{.Values.frontend_tasks_app.secretName}}
+  namespace: {{.Values.frontend_tasks_app.namespace}}
+type: Opaque
+stringData:
+
+  VITE_API_URL_PLACEHOLDER: "http://api-tasks.local/tasks/"
+
+Chart.yml
+apiVersion: v2
+name: tasksApp-k3s-argocd
+description: Stack completo de la plataforma Tasks (Django, React y Postgres)
+
+# Tipo de chart: 'application' es para desplegar servicios, 'library' es para utilidades.
+type: application
+
+# Esta es la versión del CHART (la receta). Cámbiala cada vez que edites el Helm.
+version: 0.1.0
+
+# Esta es la versión de tu APLICACIÓN real (tu código).
+appVersion: "1.0.0"
+
+# Opcional: información del autor
+maintainers:
+  - name: yoyo
+    email: yclicourt@gmail.com
+
+
+
+Values.yml
+frontend_tasks_app:
+  name: frontend-tasks-app
+  namespace: tasks-app
+  image:
+    repository: registry.local:5443/frontend-react-tasks/frontend-react-tasks
+    tag: latest
+  secretName: frontend-tasks-secret
+  serviceName: frontend-tasks-svc
+
+backend_tasks_app:
+  name: backend-tasks-app
+  namespace: tasks-app
+  image:
+    repository: registry.local:5443/backend-django-tasks/backend-django-tasks
+    tag: latest
+  secretName: backend-tasks-secret
+  serviceName: backend-tasks-svc
+
+tasks_db:
+  name: tasks-db
+  namespace: tasks-app
+  image:
+    repository: registry.local:5443/oficial-images/postgres
+    tag: alpine
+  secretName: postgres-db-secret
+  volumeName: tasks-db-storage
+  serviceName: tasks-db-svc

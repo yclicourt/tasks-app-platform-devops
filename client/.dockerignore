@@ -1,0 +1,21 @@
+# Ignorar entornos y secretos locales
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.local
+
+# Ignorar dependencias locales y builds anteriores
+node_modules
+dist
+dist-ssr
+.git
+.gitignore
+
+# Logs
+*.log
+npm-debug.log*
+
+# Ignorar dockerfile
+Dockerfile

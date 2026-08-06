@@ -1,0 +1,234 @@
+# ==========================================
+# GENERAL & OPERATING SYSTEM
+# ==========================================
+
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.swp
+*.swo
+*~
+*.tmp
+*.temp
+
+# IDE
+.vscode/
+!.vscode/extensions.json
+
+.idea/
+*.iml
+
+
+# ==========================================
+# ENVIRONMENT VARIABLES & SECRETS
+# ==========================================
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Generic secrets
+secret/
+*.secret
+
+# Kubernetes secrets
+secret.yaml
+secret.yml
+*-secret.yaml
+*-secrets.yaml
+
+# Certificates / keys
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# SSH keys
+.ssh/
+id_rsa
+id_rsa.pub
+
+
+# ==========================================
+# BACKEND PYTHON / DJANGO / FASTAPI
+# ==========================================
+
+backend/__pycache__/
+backend/**/__pycache__/
+
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+backend/.venv/
+backend/venv/
+backend/env/
+
+.venv/
+venv/
+ENV/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Django
+backend/db.sqlite3
+backend/db.sqlite3-journal
+
+# Migrations (opcional)
+# backend/**/migrations/*.py
+# !backend/**/migrations/__init__.py
+
+
+# ==========================================
+# FRONTEND NODE / REACT / VITE
+# ==========================================
+
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+
+client/node_modules/
+client/dist/
+
+# Package managers
+node_modules/
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+.pnpm-debug.log*
+
+# Yarn
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# pnpm
+.pnpm-store/
+
+# ==========================================
+# DOCKER
+# ==========================================
+
+# Docker override files
+docker-compose.override.yml
+
+# Local volumes
+*.volume/
+
+
+# ==========================================
+# KUBERNETES / HELM
+# ==========================================
+
+# Helm generated files
+helm/charts/
+
+# Helm local values
+helm/**/values-local.yaml
+helm/**/values-secret.yaml
+
+# Keep examples
+!helm/**/values.example.yaml
+
+# Kubernetes generated files
+*.kubeconfig
+kubeconfig
+kubeconfig.yaml
+
+# Local manifests
+*-local.yaml
+
+
+# ==========================================
+# TERRAFORM
+# ==========================================
+
+terraform/.terraform/
+
+# Terraform state
+terraform/*.tfstate
+terraform/*.tfstate.*
+
+terraform/crash.log
+
+# Terraform variables with secrets
+terraform/*.tfvars
+terraform/*.tfvars.json
+
+# Keep examples
+!terraform/*.tfvars.example
+
+# Terraform plans
+*.tfplan
+*.plan
+
+# Terraform lock
+# IMPORTANTE:
+# NO ignorar .terraform.lock.hcl
+# debe ir al repositorio
+# porque fija versiones de providers
+
+
+# ==========================================
+# GITHUB ACTIONS / CI-CD
+# ==========================================
+
+# Runner local
+actions-runner/
+.runner/
+
+# GitHub tokens
+*.token
+
+# Local CI files
+.github/*.local
+
+
+# ==========================================
+# DATABASES / CACHE
+# ==========================================
+
+*.sqlite
+*.sqlite3
+
+*.db
+
+redis-data/
+postgres-data/
+
+
+# ==========================================
+# LOGS
+# ==========================================
+
+logs/
+*.log
+
+
+# ==========================================
+# BUILD OUTPUT
+# ==========================================
+
+build/
+dist/
+out/
+
+
+# ==========================================
+# TEMP
+# ==========================================
+
+tmp/
+temp/
+.cache/

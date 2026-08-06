@@ -1,0 +1,17 @@
+apiVersion: v2
+name: tasksApp-k3s-argocd
+description: Stack completo de la plataforma Tasks (Django, React y Postgres)
+
+# Tipo de chart: 'application' es para desplegar servicios, 'library' es para utilidades.
+type: application
+
+# Esta es la versión del CHART (la receta). Cámbiala cada vez que edites el Helm.
+version: 0.1.0
+
+# Esta es la versión de tu APLICACIÓN real (tu código).
+appVersion: "1.0.0"
+
+# Opcional: información del autor
+maintainers:
+  - name: yoyo
+    email: yclicourt@gmail.com

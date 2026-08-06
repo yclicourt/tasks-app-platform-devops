@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{.Values.backend.name}}
+  namespace: {{.Values.global.namespace}}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{.Values.backend.name}}
+  template:
+    metadata:
+      labels:
+        app: {{.Values.backend.name}}
+    spec:
+      initContainers:
+        - name: run-migrations
+          image: "{{ .Values.global.registry}}/{{ .Values.backend.image.repository}}:{{.Values.backend.image.tag}}"
+          command: ['python', 'manage.py', 'migrate', '--noinput']
+          valueFrom:
+            - secretKeyRef:
+                name: {{.Values.backend.secretName}}
+          valueFrom:
+            - configMapKeyRef:
+                name: {{.Values.backend.configMapName}}
+      containers:
+        - name: {{.Values.backend.name}}
+          image: "{{ .Values.backend.image.repository}}:{{.Values.backend.image.tag}}"
+          imagePullPolicy: Always
+          valueFrom:
+            - secretKeyRef:
+                name: {{.Values.backend.secretName}}
+          valueFrom:
+            - configMapKeyRef:
+                name: {{.Values.backend.configMapName}}
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "500m"
+            limits:
+              memory: "512Mi"
+              cpu: "1000m"
+          ports:
+            - containerPort: 8000

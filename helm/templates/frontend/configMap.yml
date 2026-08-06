@@ -1,0 +1,7 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{.Values.frontend.configMapName}}
+  namespace: {{.Values.global.namespace}}
+data:
+  VITE_API_URL_PLACEHOLDER: "http://api-tasks.local/tasks/"

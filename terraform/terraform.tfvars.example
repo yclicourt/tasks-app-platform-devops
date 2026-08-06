@@ -1,0 +1,7 @@
+environment             = "dev"
+description_annotations = "Development environment namespace"
+secret_name             = ""
+registry_server         = ""
+registry_user           = ""
+registry_password       = ""
+registry_email          = ""
