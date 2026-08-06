@@ -1,0 +1,11 @@
+name: Test Runner
+
+on:
+  workflow_dispatch:
+
+jobs:
+  hello:
+    runs-on: self-hosted
+
+    steps:
+      - run: echo "Hola desde el runner"
