@@ -19,7 +19,7 @@ defaults:
 jobs:
   linting:
     name: Linters code
-    runs-on: [self-hosted, Linux]
+    runs-on: self-hosted
 
     steps:
       - name: Checkout code
@@ -38,7 +38,7 @@ jobs:
           flake8 .
   testing:
     name: Testing code
-    runs-on: [self-hosted, Linux]
+    runs-on: self-hosted
     needs: linting
 
     services:
