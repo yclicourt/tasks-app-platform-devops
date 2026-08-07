@@ -70,7 +70,7 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_NAME: ${{ vars.DB_NAME }}
           DB_USER: ${{ vars.DB_USER }}
-          SECRET_KEY: ${{ vars.SECRET_KEY }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: |
           ./venv/bin/python manage.py migrate
           ./venv/bin/pytest
