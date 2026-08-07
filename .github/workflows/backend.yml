@@ -72,4 +72,4 @@ jobs:
           DB_USER: ${{ vars.DB_USER }}
         run: |
           ./venv/bin/python manage.py migrate
-          ./venv/bin/python manage.py test
+          ./venv/bin/pytest
