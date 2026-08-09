@@ -74,23 +74,36 @@ jobs:
         run: |
           ./venv/bin/python manage.py migrate
           ./venv/bin/pytest
-  build:
-    name: Build Image
+  build-scanning-push:
+    name: Build, Scanning and Push Image
     runs-on: self-hosted
     needs: testing
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+      - name: Build Image
+        uses: docker/build-push-action@v7
+        with:
+          context: ./backend
+          load: true
+          tags: |
+            ${{vars.HARBOR_REGISTRY}}/backend-django-tasks/backend-django-tasks:${{ github.sha }}
+      - name: Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{vars.HARBOR_REGISTRY}}/backend-django-tasks/backend-django-tasks:${{ github.sha }}
+          format: "table"
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: "os,library"
+          severity: "CRITICAL,HIGH"
       - name: Login to Harbor Registry
         uses: docker/login-action@v4
         with:
           registry: ${{ vars.HARBOR_REGISTRY }}
           username: ${{ secrets.HARBOR_USERNAME }}
           password: ${{ secrets.HARBOR_PASSWORD }}
-      - name: Build and push
-        uses: docker/build-push-action@v7
-        with:
-          context: ./backend
-          push: true
-          tags: |
-            ${{vars.HARBOR_REGISTRY}}/backend-django-tasks/backend-django-tasks:${{ github.sha }}
+      - name: Push image to Harbor
+        run: |
+          docker push \
+            ${{ vars.HARBOR_REGISTRY }}/backend-django-tasks/backend-django-tasks:${{ github.sha }}
