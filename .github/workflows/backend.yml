@@ -14,7 +14,6 @@ on:
     paths:
       - "backend/**"
       - ".github/workflows/backend.yml"
-
 defaults:
   run:
     working-directory: backend
@@ -107,3 +106,28 @@ jobs:
         run: |
           docker push \
             ${{ vars.HARBOR_REGISTRY }}/backend-django-tasks/backend-django-tasks:${{ github.sha }}
+  update-manifest:
+    name: Update Helm image tag
+    runs-on: self-hosted
+    needs: build-scanning-push
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Update backend image tag
+        run: |
+          yq -i '.backend.image.tag = "${{ github.sha }}"' helm/values.yaml
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit changes
+        run: |
+          git add helm/values.yaml
+          git commit -m "chore(backend): update image to ${{ github.sha }}" || exit 0
+
+      - name: Push changes
+        run: |
+          git diff

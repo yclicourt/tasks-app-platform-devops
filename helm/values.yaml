@@ -23,7 +23,7 @@ backend:
 postgres:
   name: tasks-db
   image:
-    repository: "{{ .Values.global.registry.url }}/oficial-images/postgres"
+    repository: oficial-images/postgres
     tag: alpine
   secretName: postgres-db-secret
   volumeName: tasks-db-storage

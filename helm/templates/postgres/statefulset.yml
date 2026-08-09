@@ -19,7 +19,7 @@ spec:
       serviceAccountName: {{.Values.postgres.serviceAccountName}}
       containers:
         - name: {{.Values.postgres.name}}
-          image: "{{ .Values.postgres.image.repository }}:{{ .Values.postgres.image.tag }}"
+          image: "{{ .Values.global.registry.url }}/{{ .Values.postgres.image.repository }}:{{ .Values.postgres.image.tag }}"
           env:
             - name: POSTGRES_DB
               valueFrom:
