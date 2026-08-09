@@ -119,15 +119,15 @@ jobs:
         with:
           cmd: yq -i '.backend.image.tag = "${{ github.sha }}"' helm/values.yaml
       - name: Configure Git
+        working-directory: .
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Commit changes
-        run: |
           git add helm/values.yaml
-          git commit -m "chore(backend): update image to ${{ github.sha }}" || exit 0
 
-      - name: Show changes
-        run: |
-          git diff -- helm/values.yaml
+          git commit \
+            -m "chore(backend): update image to ${{ github.sha }}" \
+            || exit 0
+            
+          git push
