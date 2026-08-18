@@ -85,8 +85,6 @@ jobs:
         with:
           context: ./backend
           load: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
           tags: |
             ${{vars.HARBOR_REGISTRY}}/backend-django-tasks/backend-django-tasks:${{ github.sha }}
       - name: Trivy vulnerability scan
