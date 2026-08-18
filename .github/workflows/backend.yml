@@ -92,12 +92,12 @@ jobs:
           docker run --rm \
           -v /var/run/docker.sock:/var/run/docker.sock \
           -v "$HOME/.cache/trivy:/root/.cache/trivy" \
-          registry.local:5443/oficial-images/aquasec/trivy:latest \
+          registry.local:5443/oficial-images/aquasec/trivy:0.70.0 \
           image \
           --format table \
           --exit-code 1 \
           --ignore-unfixed \
-          --vuln-type os,library \
+          --pkg-types os,library \
           --severity CRITICAL,HIGH \
           "${{ vars.HARBOR_REGISTRY }}/backend-django-tasks/backend-django-tasks:${{ github.sha }}"
       - name: Login to Harbor Registry
