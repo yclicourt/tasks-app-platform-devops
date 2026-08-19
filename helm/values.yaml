@@ -2,7 +2,6 @@ global:
   namespace: tasks-app
   registry:
     url: registry.local:5443
-  
 frontend:
   name: frontend-tasks-app
   image:
@@ -10,16 +9,14 @@ frontend:
     tag: latest
   configMapName: frontend-tasks-config
   serviceName: frontend-tasks-svc
-
 backend:
   name: backend-tasks-app
   image:
     repository: backend-django-tasks/backend-django-tasks
-    tag: latest
+    tag: 839a92fa2dc339c9d3a5a3316e07ed6dd0bae30b
   secretName: backend-tasks-secret
   configMapName: backend-tasks-config
   serviceName: backend-tasks-svc
-
 postgres:
   name: tasks-db
   image:
