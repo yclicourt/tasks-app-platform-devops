@@ -1,8 +1,8 @@
 module "namespace" {
-  source         = "./modules/namespace"
-  namespace_name = var.namespace_name
+  source                  = "./modules/namespace"
+  namespace_name          = var.namespace_name
   description_annotations = var.description_annotations
-  environment = var.environment
+  environment             = var.environment
 
 }
 
@@ -16,7 +16,7 @@ module "secret" {
 }
 
 module "service_account" {
-  source = "./modules/service_account"
+  source         = "./modules/service_account"
   namespace_name = var.namespace_name
-  secret_name = var.secret_name
+  secret_name    = var.secret_name
 }
