@@ -18,6 +18,8 @@ defaults:
   run:
     working-directory: backend
 
+permissions:
+  contents: write
 jobs:
   linting:
     name: Linters code
@@ -117,6 +119,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update backend image tag
         uses: mikefarah/yq@v4
