@@ -1,0 +1,122 @@
+name: "Frontend-Tasks-App"
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "client/**"
+      - ".github/workflows/frontend.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "client/**"
+      - ".github/workflows/frontend.yml"
+
+defaults:
+  run:
+    working-directory: client
+
+permissions:
+  contents: write
+
+jobs:
+  linting:
+    name: Lint code
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - name: Install dependencies
+        run: |
+          npm install -g pnpm@10.33.0
+          pnpm install --frozen-lockfile
+      - name: ESLint
+        run: pnpm run lint
+
+  build-test:
+    name: Build test
+    runs-on: self-hosted
+    needs: linting
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - name: Install dependencies and build
+        run: |
+          npm install -g pnpm@10.33.0
+          pnpm install --frozen-lockfile
+          pnpm run build
+
+  build-scanning-push:
+    name: Build, Scanning and Push Image
+    runs-on: self-hosted
+    needs: build-test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - name: Build Image
+        uses: docker/build-push-action@v7
+        with:
+          context: ./client
+          load: true
+          build-args: |
+            VITE_API_URL_PLACEHOLDER=__VITE_API_URL__
+          tags: |
+            ${{vars.HARBOR_REGISTRY}}/frontend-react-tasks/frontend-react-tasks:${{ github.sha }}
+      - name: Trivy vulnerability scan
+        run: |
+          docker run --rm \
+          -v /var/run/docker.sock:/var/run/docker.sock \
+          -v "$HOME/.cache/trivy:/root/.cache/trivy" \
+          registry.local:5443/oficial-images/aquasec/trivy:0.70.0 \
+          image \
+          --format table \
+          --exit-code 1 \
+          --ignore-unfixed \
+          --pkg-types os,library \
+          --severity CRITICAL,HIGH \
+          "${{ vars.HARBOR_REGISTRY }}/frontend-react-tasks/frontend-react-tasks:${{ github.sha }}"
+      - name: Login to Harbor Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ vars.HARBOR_REGISTRY }}
+          username: ${{ secrets.HARBOR_USERNAME }}
+          password: ${{ secrets.HARBOR_PASSWORD }}
+      - name: Push image to Harbor
+        run: |
+          docker push \
+            ${{ vars.HARBOR_REGISTRY }}/frontend-react-tasks/frontend-react-tasks:${{ github.sha }}
+
+  update-manifest:
+    name: Update Helm image tag
+    runs-on: self-hosted
+    needs: build-scanning-push
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+
+      - name: Update frontend image tag
+        uses: mikefarah/yq@v4
+        with:
+          cmd: yq -i '.frontend.image.tag = "${{ github.sha }}"' helm/values.yaml
+      - name: Configure Git
+        working-directory: .
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add helm/values.yaml
+
+          git commit \
+            -m "chore(frontend): update image to ${{ github.sha }}" \
+            || exit 0
+
+          git push
