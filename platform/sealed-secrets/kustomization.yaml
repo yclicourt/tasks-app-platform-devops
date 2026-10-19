@@ -1,0 +1,5 @@
+# Sealed Secrets controller - capa de plataforma
+# Se despliega via ArgoCD (ver application.yaml) o directo:
+#   kubectl apply -k .
+resources:
+  - https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.39.0/controller.yaml
