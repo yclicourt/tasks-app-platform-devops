@@ -1,0 +1,19 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: tasks-app-gateway
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app.kubernetes.io/name: tasks-app-gateway
+    app.kubernetes.io/part-of: tasks-app-platform
+spec:
+  # Debe coincidir con el GatewayClass instalado en el cluster
+  # (p. ej. el que expone Traefik v3 con el provider de Gateway API habilitado)
+  gatewayClassName: traefik
+  listeners:
+    - name: web
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: Same
