@@ -84,11 +84,6 @@ secrets: `HARBOR_USERNAME`, `HARBOR_PASSWORD`, `SECRET_KEY`, `PAT_TOKEN`.
 - **Kyverno en Audit primero**: las politicas se observan antes de bloquear.
 - **Velero con restic**: local-path (k3s) no soporta VolumeSnapshots.
 
-## Pendiente / notas
-
-- Borrar `helm/templates/*/ingress.yml` (reemplazados por HTTPRoutes).
-- Verificar el controller de sealed-secrets en el cluster antes de re-sellar.
-- Cambiar credenciales placeholder en `platform/openobserve/values.yaml` y `platform/minio/minio.yaml`.
 - **Sin Backstage (por ahora)**: es el portal del developer, no la plataforma en si.
   Su valor esta en el catalogo, los templates y la adopcion real de un equipo; en un
   homelab seria el componente mas pesado del cluster y un cascaron vacio. El
