@@ -1,0 +1,22 @@
+# Aplicar una sola vez (despues del AppProject):
+#   kubectl -n argocd apply -f appproject.yaml
+#   kubectl -n argocd apply -f root.yaml
+# A partir de ahi, todo lo que agregues en applications/ se despliega solo.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-root
+  namespace: argocd
+spec:
+  project: platform
+  source:
+    repoURL: https://github.com/yclicourt/tasks-app-platform-devops.git
+    targetRevision: main
+    path: platform/app-of-apps/applications
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

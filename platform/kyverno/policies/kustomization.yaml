@@ -1,0 +1,4 @@
+resources:
+  - disallow-latest-tag.yaml
+  - require-resource-limits.yaml
+  - require-non-root.yaml

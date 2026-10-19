@@ -1,0 +1,3 @@
+# Kyverno controller - via ArgoCD o directo: kubectl apply -k .
+resources:
+  - https://github.com/kyverno/kyverno/releases/download/v1.19.1/install.yaml
