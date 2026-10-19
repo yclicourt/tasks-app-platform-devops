@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tasks-app
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: tasks-app
+  source:
+    repoURL: https://github.com/yclicourt/tasks-app-platform-devops.git
+    targetRevision: main
+    path: helm
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: tasks-app
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
