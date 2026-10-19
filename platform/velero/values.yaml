@@ -1,0 +1,26 @@
+# Velero via ArgoCD (multi-source: chart remoto + este values desde git).
+# Las credenciales NO van aqui: crear el Secret 'cloud-credentials' en el
+# namespace velero con kubeseal (ver README), con la llave 'cloud':
+#   [default]
+#   aws_access_key_id = <minio root-user>
+#   aws_secret_access_key = <minio root-password>
+
+configuration:
+  backupStorageLocation:
+    - name: minio
+      provider: aws
+      bucket: velero-backups
+      credential:
+        name: cloud-credentials
+        key: cloud
+      config:
+        region: minio
+        s3ForcePathStyle: "true"
+        s3Url: http://minio.minio:9000
+
+# Sin volumeSnapshotLocation: local-path (k3s) no soporta snapshots.
+# Los volumenes se respaldan con file-system backup (node-agent/restic).
+deployNodeAgent: true
+# En charts viejos esta llave se llamaba deployRestic.
+
+initContainers: []
