@@ -1,0 +1,39 @@
+# Expone OpenObserve por el Gateway compartido de la plataforma.
+# OJO: el Gateway vive en el namespace tasks-app y esta Route en openobserve,
+# por eso hace falta el ReferenceGrant de abajo (modelo seguro por defecto de Gateway API:
+# ninguna Route puede engancharse a un Gateway de otro namespace sin permiso explicito).
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: openobserve-route
+  namespace: openobserve
+spec:
+  parentRefs:
+    - name: tasks-app-gateway
+      namespace: tasks-app
+  hostnames:
+    - o2-tasks.local
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        # Verificar con: kubectl -n openobserve get svc
+        - name: o2-openobserve-standalone
+          port: 5080
+---
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: allow-openobserve-routes
+  namespace: tasks-app
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: openobserve
+  to:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: tasks-app-gateway
