@@ -16,4 +16,15 @@ spec:
       protocol: HTTP
       allowedRoutes:
         namespaces:
-          from: Same
+          from: All
+    - name: websecure
+      port: 443
+      protocol: HTTPS
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: platform-tls
+      allowedRoutes:
+        namespaces:
+          from: All

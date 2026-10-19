@@ -1,0 +1,9 @@
+# Emisor self-signed para el homelab.
+# Let's Encrypt no sirve aqui: tus dominios son .local sin DNS publica.
+# En produccion se reemplazaria por un ClusterIssuer ACME (DNS-01).
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: selfsigned-platform
+spec:
+  selfSigned: {}

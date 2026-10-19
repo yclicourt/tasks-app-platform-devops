@@ -1,0 +1,16 @@
+# cert-manager emite este certificado con el ClusterIssuer selfsigned-platform
+# y lo guarda en el Secret platform-tls, que el Gateway sirve en el listener HTTPS.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: platform-tls
+  namespace: {{ .Values.global.namespace }}
+spec:
+  secretName: platform-tls
+  issuerRef:
+    kind: ClusterIssuer
+    name: selfsigned-platform
+  dnsNames:
+    - tasks-app.local
+    - api-tasks.local
+    - o2-tasks.local
