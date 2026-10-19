@@ -89,3 +89,13 @@ secrets: `HARBOR_USERNAME`, `HARBOR_PASSWORD`, `SECRET_KEY`, `PAT_TOKEN`.
 - Borrar `helm/templates/*/ingress.yml` (reemplazados por HTTPRoutes).
 - Verificar el controller de sealed-secrets en el cluster antes de re-sellar.
 - Cambiar credenciales placeholder en `platform/openobserve/values.yaml` y `platform/minio/minio.yaml`.
+- **Sin Backstage (por ahora)**: es el portal del developer, no la plataforma en si.
+  Su valor esta en el catalogo, los templates y la adopcion real de un equipo; en un
+  homelab seria el componente mas pesado del cluster y un cascaron vacio. El
+  "paved road" que un portal expondria (CI, GitOps, politicas) ya existe debajo;
+  el portal se agrega cuando hay developers que lo consuman.
+- **Sin Crossplane**: es una *alternativa* a Terraform, no un complemento, y este
+  repo ya tiene Terraform funcionando (modulos, remote state, CI). Su superpoder es
+  componer APIs de nube publica (RDS, buckets) para self-service de developers; en
+  un k3s homelab no hay esas APIs que abstraer. Dos herramientas de IaC implican
+  dos fuentes de verdad.
